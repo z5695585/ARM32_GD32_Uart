@@ -35,3 +35,4 @@
 .\objects\main.o: .\GD32_Hal\Include\gd32f30x_exmc.h
 .\objects\main.o: .\Driver\led_drv.h
 .\objects\main.o: .\Driver\usb2com_drv.h
+.\objects\main.o: App\usb2com_app.h

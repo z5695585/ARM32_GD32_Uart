@@ -1,5 +1,6 @@
 --cpu=Cortex-M4.fp.sp
 ".\objects\main.o"
+".\objects\usb2com_app.o"
 ".\objects\system_gd32f30x.o"
 ".\objects\startup_gd32f30x_hd.o"
 ".\objects\led_drv.o"

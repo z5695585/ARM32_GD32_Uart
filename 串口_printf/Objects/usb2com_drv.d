@@ -1,7 +1,6 @@
 .\objects\usb2com_drv.o: Driver\usb2com_drv.c
 .\objects\usb2com_drv.o: C:\Users\H239572\AppData\Local\Keil_v5\ARM\ARM_Compiler_5.06u7\Bin\..\include\stdint.h
 .\objects\usb2com_drv.o: C:\Users\H239572\AppData\Local\Keil_v5\ARM\ARM_Compiler_5.06u7\Bin\..\include\stdio.h
-.\objects\usb2com_drv.o: C:\Users\H239572\AppData\Local\Keil_v5\ARM\ARM_Compiler_5.06u7\Bin\..\include\stdbool.h
 .\objects\usb2com_drv.o: .\Arm\gd32f30x.h
 .\objects\usb2com_drv.o: .\Arm\core_cm4.h
 .\objects\usb2com_drv.o: .\Arm\core_cmInstr.h
@@ -34,4 +33,3 @@
 .\objects\usb2com_drv.o: .\GD32_Hal\Include\gd32f30x_misc.h
 .\objects\usb2com_drv.o: .\GD32_Hal\Include\gd32f30x_enet.h
 .\objects\usb2com_drv.o: .\GD32_Hal\Include\gd32f30x_exmc.h
-.\objects\usb2com_drv.o: Driver\led_drv.h

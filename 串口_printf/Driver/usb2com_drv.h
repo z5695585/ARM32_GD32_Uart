@@ -17,11 +17,11 @@ void Usb2ComTest(void);
 void Usb2ComInit(uint32_t baudRate);
 
 /**
- * @description: 根据UART接收到的数据帧实施对应的逻辑
- * @param：
- * @return: 
+ * @description: 注册回调函数
+ * @param
+ * @return:
  */
-void Usb2ComTask(void);
+void regUsb2ComCb(void (*pFunc)(uint8_t data));
 
 
 #endif
