@@ -4,11 +4,13 @@
 #include "led_drv.h"
 #include "usb2com_drv.h"
 #include "usb2com_app.h"
+#include "delay.h"
 
 static void DrvInit(void)
 {
 	LedInit();
 	Usb2ComInit(115200);
+	DelayInit();
 }
 
 static void AppInit(void)
@@ -25,5 +27,6 @@ int main(void)
 	while(1)
 	{
 		Usb2ComTask();
+		DelayNms(10);
 	}
 }

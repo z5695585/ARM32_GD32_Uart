@@ -4,15 +4,25 @@
 #include "gd32f30x.h"
 #include "usb2com_drv.h"
 #include "led_drv.h"
+#include "queue.h"
 
-
-#define DATA_LEN 20							//用于保存接收数据的数组的最大长度
+/**
+******************************************************************************************
+包格式	帧头0    帧头1    数据长度    功能字    LED编号    亮/灭    异或校验数据
+		0x55	 0xAA	   0x03 	   0x06      0x00       0x01       0xXX
+******************************************************************************************
+*/
 #define FRAME_HEAD_0 0x55					//接收帧头第一个字节
 #define FRAME_HEAD_1 0xAA					//接收帧头第二个字节
-#define FRAME_DATA_LEN 3					//数据域长度
-#define FRAME_LEN ((FRAME_DATA_LEN) + 4)	//帧总长度
+#define FRAME_LEN_MIN 7						//最小帧长度
+#define FRAME_LEN_MAX 11					//最大帧长度
+#define FRAME_DATA_LEN_MAX (FRAME_LEN_MAX - 4)
 #define FRAME_FUNC_INDEX 3					//数据帧表示命令的字节索引号
-#define FRAME_FUNC_LED_CTRL 0x06			//命令号
+#define FRAME_FUNC_LED_CTRL 0x06			//功能字
+
+#define DATA_LEN 77								//用于保存接收数据的数组的最大长度
+static uint8_t g_rcvData[DATA_LEN] = {0};		//接收数据的数组
+static QueueType_t g_rcvQueue = {0};
 
 
 /*
@@ -27,10 +37,6 @@ typedef struct
 	uint8_t LedState;
 } LedCtrlInfo_t;
 
-static uint8_t g_dataIndex = 0;					//保存接收数据的索引号
-static uint8_t g_rcvData[DATA_LEN] = {0};		//接收数据的数组
-static bool g_packRcvd = false;					//接收完一包数据标志
-
 /**
  * @description: UART接收到的数据处理，判断是否一个合法完整的数据帧
  * @param
@@ -38,25 +44,7 @@ static bool g_packRcvd = false;					//接收完一包数据标志
  */
 static void ProcUartData(uint8_t data)
 {
-	g_rcvData[g_dataIndex++] = data;
-	switch(g_dataIndex)
-	{
-		case 1:                                                    	//如果第一个数据与帧头0不匹配，索引号清零并退出
-			if(g_rcvData[g_dataIndex - 1] != FRAME_HEAD_0)
-				g_dataIndex = 0;
-				break;
-		case 2:														//如果第一个数据与帧头0不匹配，索引号清零并退出
-			if(g_rcvData[g_dataIndex - 1] != FRAME_HEAD_1)
-				g_dataIndex = 0;
-				break;
-		case FRAME_LEN:												//索引号涨到FRAME_LEN后断帧，打包数据
-			g_packRcvd = true;
-			g_dataIndex = 0;
-			break;
-		default:
-				break;
-	}
-		
+	EnQueue(&g_rcvQueue, data);
 }
 
 
@@ -95,18 +83,43 @@ static void CtrlLed(LedCtrlInfo_t *ctrlData )
  */
 void Usb2ComTask(void)
 {
-	if(g_packRcvd == true)	//先判断是否有整包数据
+	uint8_t readBuf[DATA_LEN] = {0};
+	while(DeQueue(&g_rcvQueue, &readBuf[0]) == QUEUE_OK)
 	{
-		g_packRcvd = false;
-		if(CalXorSum(g_rcvData, FRAME_LEN-1) != g_rcvData[FRAME_LEN-1])	//判断数据包校验是否正确
+		if(readBuf[0] != FRAME_HEAD_0)
 		{
-			return;
+			continue;
 		}
-		if(g_rcvData[FRAME_FUNC_INDEX] == FRAME_FUNC_LED_CTRL)	//根据命令号，调用函数实现控制
+		if((DeQueue(&g_rcvQueue, &readBuf[1]) == QUEUE_EMPTY) || (readBuf[1] != FRAME_HEAD_1))
 		{
-			CtrlLed((LedCtrlInfo_t *)&g_rcvData[FRAME_FUNC_INDEX + 1]);
+			continue;
 		}
+		if(DeQueue(&g_rcvQueue, &readBuf[2]) == QUEUE_EMPTY || readBuf[2] > FRAME_DATA_LEN_MAX)
+		{
+			continue;
+		}
+		if(GroupDeQueue(&g_rcvQueue, &readBuf[3], (readBuf[2]+1)) != readBuf[2]+1)
+		{
+			continue;
+		}
+		if(CalXorSum(readBuf, (readBuf[2] + 3)) != readBuf[readBuf[2] + 3])	//判断数据包校验是否正确
+		{
+			continue;
+		}
+		if(readBuf[FRAME_FUNC_INDEX] == FRAME_FUNC_LED_CTRL)	//根据命令号，调用函数实现控制
+		{
+			CtrlLed((LedCtrlInfo_t *)&readBuf[FRAME_FUNC_INDEX + 1]);
+		}
+		for(uint32_t i = 0; i < readBuf[2] + 4; i++ )
+		{
+			printf("%02x", readBuf[i]);
+		}
+		printf("\n");
 	}
+	
+	
+	
+	
 }
 
 /**
@@ -117,4 +130,5 @@ void Usb2ComTask(void)
 void Usb2ComAppInit(void)
 {
 	regUsb2ComCb(ProcUartData);
+	QueueInit(&g_rcvQueue, g_rcvData, DATA_LEN);
 }

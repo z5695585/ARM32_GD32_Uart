@@ -36,3 +36,4 @@
 .\objects\usb2com_app.o: .\GD32_Hal\Include\gd32f30x_exmc.h
 .\objects\usb2com_app.o: .\Driver\usb2com_drv.h
 .\objects\usb2com_app.o: .\Driver\led_drv.h
+.\objects\usb2com_app.o: .\Driver\queue.h

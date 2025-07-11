@@ -36,3 +36,4 @@
 .\objects\main.o: .\Driver\led_drv.h
 .\objects\main.o: .\Driver\usb2com_drv.h
 .\objects\main.o: App\usb2com_app.h
+.\objects\main.o: .\Driver\delay.h
